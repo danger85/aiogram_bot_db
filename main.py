@@ -14,7 +14,7 @@ from aiogram.filters.callback_data import CallbackData
 import os #для token
 
 #logging.basicConfig(level=logging.INFO)
-bot = Bot (token='5148261882:AAHq64uk8wpC7AsBom8-r6Oy1UNK70xkcls')
+bot = Bot (token='please fill inasdfdsfsadfasdf')
 dp = Dispatcher()
 
 class MyCallback(CallbackData, prefix="my"):
