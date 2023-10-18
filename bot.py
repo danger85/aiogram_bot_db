@@ -3,6 +3,12 @@ from bs4 import BeautifulSoup
 import requests
 import logging
 import json
+import os
+import dotenv
+
+dotenv.load_dotenv()
+Bot_Token=os.getenv("bot_token")
+print(Bot_Token)
 
 from aiogram import Bot, Dispatcher, types #
 from aiogram.filters.command import Command # обработка команд
@@ -14,7 +20,7 @@ from aiogram.filters.callback_data import CallbackData
 import os #для token
 
 #logging.basicConfig(level=logging.INFO)
-bot = Bot (token='please fill inasdfdsfsadfasdf')
+bot = Bot (token=Bot_Token)
 dp = Dispatcher()
 
 class MyCallback(CallbackData, prefix="my"):
