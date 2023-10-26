@@ -4,20 +4,24 @@ import logging
 import json
 import os
 import dotenv
+
 from config_data.config import Config, load_config
+from handlers import user_handlers, other_handlers
 
 dotenv.load_dotenv()
 Bot_Token=os.getenv("bot_token")
 print(Bot_Token)
 
 
-from aiogram import Bot, Dispatcher, types #
+from aiogram import Bot, Dispatcher, F #
 from aiogram.filters.command import Command # обработка команд
 from aiogram.enums.dice_emoji import DiceEmoji # кубики подбрасывать
 from aiogram import F # для обработки нажатий клавиш
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove,InlineKeyboardButton, CallbackQuery,inline_keyboard_markup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-
+from keyboards.main_menu import set_main_menu
 import os #для token
 
 #logging.basicConfig(level=logging.INFO)
@@ -32,19 +36,22 @@ def markup_num(c_f: str, val: str): #формирование кнопок в в
   print(f"\tmessage is {val}, lh = {len(val)}")
   lh = len(val)
   m_up_num = InlineKeyboardBuilder()
-  ikb = types.InlineKeyboardButton
+  ikb = InlineKeyboardButton
 
   def _num_one_to_nine():# создание кнопок от 1 до 9
-    m_up_num.add(types.InlineKeyboardButton(text="7", callback_data="{\"Kb\":\"num\",\"V\":\"7\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="8", callback_data="{\"Kb\":\"num\",\"V\":\"8\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="9", callback_data="{\"Kb\":\"num\",\"V\":\"9\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="4", callback_data="{\"Kb\":\"num\",\"V\":\"4\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="5", callback_data="{\"Kb\":\"num\",\"V\":\"5\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="6", callback_data="{\"Kb\":\"num\",\"V\":\"6\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="1", callback_data="{\"Kb\":\"num\",\"V\":\"1\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="2", callback_data="{\"Kb\":\"num\",\"V\":\"2\",\"CF\":\"" + c_f + "\"}"),
-                 types.InlineKeyboardButton(text="3", callback_data="{\"Kb\":\"num\",\"V\":\"3\",\"CF\":\"" + c_f + "\"}")
-                )
+    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data="{\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}") for i in range(7,10))]
+    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data="{\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}") for i in range(4,7))]
+    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data="{\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}") for i in range(1,4))]
+  """   m_up_num.add(InlineKeyboardButton(text="7", callback_data="{\"Kb\":\"num\",\"V\":\"7\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="8", callback_data="{\"Kb\":\"num\",\"V\":\"8\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="9", callback_data="{\"Kb\":\"num\",\"V\":\"9\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="4", callback_data="{\"Kb\":\"num\",\"V\":\"4\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="5", callback_data="{\"Kb\":\"num\",\"V\":\"5\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="6", callback_data="{\"Kb\":\"num\",\"V\":\"6\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="1", callback_data="{\"Kb\":\"num\",\"V\":\"1\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="2", callback_data="{\"Kb\":\"num\",\"V\":\"2\",\"CF\":\"" + c_f + "\"}"),
+                 InlineKeyboardButton(text="3", callback_data="{\"Kb\":\"num\",\"V\":\"3\",\"CF\":\"" + c_f + "\"}")
+                ) """
 
   if c_f == "fill_table" and lh == 0 or val == "_":  # первая цифра дня
     InlineKeyboardBuilder().add(ikb(text="1", callback_data="{\"Kb\":\"num\",\"V\":\"1\",\"CF\":\"" + c_f + "\"}"),
@@ -105,8 +112,8 @@ def markup_num(c_f: str, val: str): #формирование кнопок в в
 
   if c_f == "mod_p" or c_f == "calc":
     _num_one_to_nine()
-    m_up_num.add(types.InlineKeyboardButton(text="0", callback_data="{\"Kb\":\"num\",\"V\":\"0\",\"CF\":\"" + c_f + "\"}"))
-    m_up_num.add(types.InlineKeyboardButton(text="Ввод.", callback_data="{\"Kb\":\"func_key\",\"V\":\"enter\",\"CF\":\"" + c_f + "\"}"))
+    m_up_num.add(InlineKeyboardButton(text="0", callback_data="{\"Kb\":\"num\",\"V\":\"0\",\"CF\":\"" + c_f + "\"}"))
+    m_up_num.add(InlineKeyboardButton(text="Ввод.", callback_data="{\"Kb\":\"func_key\",\"V\":\"enter\",\"CF\":\"" + c_f + "\"}"))
   m_up_num.adjust(3)
   return m_up_num.as_markup()
 
@@ -115,17 +122,17 @@ def markup_currency(c_f: str, data: dict, row_name: list): #создание т�
   print(data)
   markup_cur = InlineKeyboardBuilder()
   for x, i in enumerate(row_name):
-    markup_cur.add(types.InlineKeyboardButton(text=str(i), callback_data="{\"Kb\":\"cur\",\"V\":\"v\",\"CF\":\"cur\"}"),  # 0 колонка ['Валюта','операция',  'до 200', '<10.000', '>10.000']
-                   types.InlineKeyboardButton(text=str(data[i][0]), callback_data="{\"Kb\":\"" + 'mul$' + "\",\"V\":\"" + str(data[i][0]) + "\",\"CF\":\"cur\"}"),# 1 колонка ['$','покупка', '63.80', ...]
-                   types.InlineKeyboardButton(text=str(data[i][1]), callback_data="{\"Kb\":\"" + 'div$' + "\",\"V\":\"" + str(data[i][1]) + "\",\"CF\":\"cur\"}"),  # 2 колонка ['$','продажа', '65.30',...]
-                   types.InlineKeyboardButton(text=str(data[i][2]), callback_data="{\"Kb\":\"" + 'mul€' + "\",\"V\":\"" + str(data[i][2]) + "\",\"CF\":\"cur\"}"), # 3 колонка ['€','покупка', '64.50', ...]
-                   types.InlineKeyboardButton(text=str(data[i][3]), callback_data="{\"Kb\":\"" + 'div€' + "\",\"V\":\"" + str(data[i][3]) + "\",\"CF\":\"cur\"}")) # 4  колонка ['€','продажа', '66.00',...]
-  markup_cur.add(types.InlineKeyboardButton(text="Выйти из меню", callback_data="{\"Kb\":\"param\",\"V\":\"leave\",\"CF\":\"parameters\"}"))
+    markup_cur.add(InlineKeyboardButton(text=str(i), callback_data="{\"Kb\":\"cur\",\"V\":\"v\",\"CF\":\"cur\"}"),  # 0 колонка ['Валюта','операция',  'до 200', '<10.000', '>10.000']
+                   InlineKeyboardButton(text=str(data[i][0]), callback_data="{\"Kb\":\"" + 'mul$' + "\",\"V\":\"" + str(data[i][0]) + "\",\"CF\":\"cur\"}"),# 1 колонка ['$','покупка', '63.80', ...]
+                   InlineKeyboardButton(text=str(data[i][1]), callback_data="{\"Kb\":\"" + 'div$' + "\",\"V\":\"" + str(data[i][1]) + "\",\"CF\":\"cur\"}"),  # 2 колонка ['$','продажа', '65.30',...]
+                   InlineKeyboardButton(text=str(data[i][2]), callback_data="{\"Kb\":\"" + 'mul€' + "\",\"V\":\"" + str(data[i][2]) + "\",\"CF\":\"cur\"}"), # 3 колонка ['€','покупка', '64.50', ...]
+                   InlineKeyboardButton(text=str(data[i][3]), callback_data="{\"Kb\":\"" + 'div€' + "\",\"V\":\"" + str(data[i][3]) + "\",\"CF\":\"cur\"}")) # 4  колонка ['€','продажа', '66.00',...]
+  markup_cur.add(InlineKeyboardButton(text="Выйти из меню", callback_data="{\"Kb\":\"param\",\"V\":\"leave\",\"CF\":\"parameters\"}"))
   markup_cur.adjust(5)
   return markup_cur.as_markup(resize_keyboard = True)
 
 @dp.callback_query(F.data.contains("cur"))
-async def calc(callback: types.CallbackQuery):# "{\"Kb\":\"cur\",\"V\":\"" + str(data[i][0]) + "\",\"CF\":\"cur\"}"
+async def calc(callback: CallbackQuery):# "{\"Kb\":\"cur\",\"V\":\"" + str(data[i][0]) + "\",\"CF\":\"cur\"}"
   print(f"Came from markup_currency to CALC function by callback,{callback.data} ",
         f"called by {str(json.loads(str(callback.data))['CF'])}",
         f"value is {str(json.loads(str(callback.data))['V'])}",
@@ -191,6 +198,10 @@ async def main():
   config: Config = load_config()
   bot = Bot(token=config.tg_bot.token)
   dp = Dispatcher()
+  await set_main_menu(bot)
+  dp.include_router(user_handlers.router)
+  dp.include_router(other_handlers.router)
+  await bot.delete_webhook(drop_pending_updates=True)
   await dp.start_polling(bot)
 
 if __name__ == "__main__":
