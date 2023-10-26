@@ -1,6 +1,9 @@
 #ssh-rsa keys
 id_rsa.pub
 id_rsa
+#dirs and fi
+#dirs and fi
 .env
-.vscode
-.mypy_cache
+.vscode/
+.mypy_cache/
+.gitignore
