@@ -1,14 +1,16 @@
-from aiogram.types import Message
+from aiogram.types import Message,CallbackQuery
 from aiogram.filters import Command, CommandStart
-from aiogram import Router
+from aiogram import Router,F
 from lexicon.lexicon_ru import LEXICON_RU
 from bs4 import BeautifulSoup
 import requests
-
+from keyboards.currency_kb import currency_kb
 router= Router()
-@router.message(CommandStart)
+
+""" @router.message(CommandStart)
 async def cmd_start(message:Message):
-  await message.answer(text=LEXICON_RU['/start'])
+  await message.answer(text=LEXICON_RU['/start']) """
+
 
 @router.message(Command(commands="help"))
 async def help_command(message:Message):
@@ -78,4 +80,67 @@ async def currency(message: Message):
       await message.answer("Не смог запарсить сайт ЦентрБанка")
       print(f"\t {usd_rate[1]}, {eur_rate[1]}")
     await message.answer(f"Данные с обменного пункта Благодатка, курс по ЦБ на сегодня $={usd_rate[1]} ₽, € = {eur_rate[1]} ₽",
-                         reply_markup = markup_currency("currency", data, row_name))
+                         reply_markup = currency_kb(data, row_name))
+
+@router.callback_query(F.data.contains("cur"))
+async def calc(callback: CallbackQuery):# "{\"Kb\":\"cur\",\"V\":\"" + str(data[i][0]) + "\",\"CF\":\"cur\"}"
+  print(f"Came from markup_currency to CALC function by callback,{callback.data} ",
+        f"called by {str(json.loads(str(callback.data))['CF'])}",
+        f"value is {str(json.loads(str(callback.data))['V'])}",
+        f"action is {str(json.loads(str(callback.data))['Kb'])}"
+       )
+  global mul_div
+  global exchange_k
+  exchange_k = json.loads(str(callback.data))['V']
+  mul_div = json.loads(str(callback.data))['Kb']
+  if mul_div[:-1] == "div":
+    await callback.message.answer(f"Введите сумму для внесения в кассу (₽), которую хотите обменять на {mul_div[-1]}",
+                                  reply_markup=markup_num("calc", "0"))
+  elif mul_div[:-1] == "mul":
+    await callback.message.answer(f"Введите сумму для внесения в кассу ({mul_div[-1]}), которую хотите обменять на ₽",
+                                  reply_markup=markup_num("calc", "0"))
+
+@router.callback_query(F.data.contains("num")) #обработка показа клавиатуры
+async def callback_num(callback: CallbackQuery):
+  print(f"in callback_num function, by Callback, called by: {json.loads(callback.data)}")
+  #print(f"\tmessage text is {callback.message.text}, came from user {callback.message.from_user.id}")
+  digit = json.loads(callback.data)["V"]
+
+  if json.loads(callback.data)["CF"] == "delete":  # если пришли из удаления
+    global id_to_delete
+    if len(id_to_delete) > 0:
+      if id_to_delete[0] == "_":
+          id_to_delete = ""
+    id_to_delete = id_to_delete + digit
+    await dp.edit_message_text(id_to_delete, callback.message.chat.id, callback.message.message_id, reply_markup=markup_num("delete", "0"))
+
+  if json.loads(callback.data)["CF"] == "fill_table":
+    global get_date
+    if digit.isdigit() and len(get_date) <= 10:
+      if get_date[:1] == "_":
+        get_date = ""
+      get_date = get_date + digit
+    if len(get_date) == 2 or len(get_date) == 5:
+      get_date = get_date + "."
+    if digit == "cls":
+      get_date = "_"
+    await bot.edit_message_text(get_date, call.message.chat.id, call.message.message_id, reply_markup=markup_num("fill_table", get_date))
+
+  if str(json.loads(callback.data)["CF"]) == "mod_p" or str(json.loads(callback.data)["CF"]) == "calc":
+    global qty_out_text
+    qty_out_text = qty_out_text + str(digit)
+    await callback.message.edit_text(qty_out_text, reply_markup=markup_num(str(json.loads(callback.data)["CF"]), qty_out_text))
+
+@router.callback_query(F.data.contains("func_key") & F.data.contains("enter") & F.data.contains("calc")) #пришли после нажатия ввода при вычислении денег
+async def exchange_calc(call: CallbackQuery):
+  print(f"in exchange_calc function, ClBkHr, called by {list(json.loads(call.data).values())}")
+  print(f"\tmessage text is {call.message.text}, came from {call.message.from_user.id}")
+  global messages_dict
+  global exchange_k
+  global qty_out_text
+  global mul_div
+  if mul_div[:-1] == "div":
+    print(f"{qty_out_text}, {exchange_k}")
+    await call.message.edit_text(f"При обмене {qty_out_text} ₽ , получите {float(qty_out_text) / float(exchange_k)} {mul_div[-1]}")
+  else:
+    await call.message.edit_text(f"При обмене {qty_out_text} {mul_div[-1]}, получите {float(qty_out_text) * float(exchange_k)} ₽")

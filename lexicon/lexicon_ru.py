@@ -4,3 +4,9 @@ LEXICON_RU: dict[str, str] = {
 }
 LEXICON_COMMANDS: dict[str,str]= {"/c":"Курс Валют","/p":"Параметры"}
 LEXICON : dict[str:str] = {"forward":">>", "backward":"<<"}
+
+LEXICON_DB: dict[str,str]={
+    "show":"Отобразить все",
+    "add":"Добавить событ.",
+    "delete":"Удалить событ. "
+    }
