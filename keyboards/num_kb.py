@@ -1,30 +1,20 @@
-def markup_num(c_f: str, val: str): #формирование кнопок в виде циферок
-  print(f"\tCame from {c_f} in markup_num, markup layout ")
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton,InlineKeyboardMarkup
+
+def numbers_kb(c_f: str, val: str): #формирование кнопок в виде циферок
+  print(f"\tCame from {c_f} to", __name__," markup layout ")
   print(f"\tmessage is {val}, lh = {len(val)}")
   lh = len(val)
   m_up_num = InlineKeyboardBuilder()
   ikb = InlineKeyboardButton
 
   def _num_one_to_nine():# создание кнопок от 1 до 9
-    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data="{\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}") for i in range(7,10))]
-    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data="{\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}") for i in range(4,7))]
-    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data="{\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}") for i in range(1,4))]
-  """   m_up_num.add(InlineKeyboardButton(text="7", callback_data="{\"Kb\":\"num\",\"V\":\"7\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="8", callback_data="{\"Kb\":\"num\",\"V\":\"8\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="9", callback_data="{\"Kb\":\"num\",\"V\":\"9\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="4", callback_data="{\"Kb\":\"num\",\"V\":\"4\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="5", callback_data="{\"Kb\":\"num\",\"V\":\"5\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="6", callback_data="{\"Kb\":\"num\",\"V\":\"6\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="1", callback_data="{\"Kb\":\"num\",\"V\":\"1\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="2", callback_data="{\"Kb\":\"num\",\"V\":\"2\",\"CF\":\"" + c_f + "\"}"),
-                 InlineKeyboardButton(text="3", callback_data="{\"Kb\":\"num\",\"V\":\"3\",\"CF\":\"" + c_f + "\"}")
-                ) """
+    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data={"Kb":"num","V":i,"CF":c_f}) for i in range(7,10)]
+    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data={\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}) for i in range(4,7)]
+    m_up_num.add: list[InlineKeyboardButton]=[InlineKeyboardButton(text=i, callback_data={\"Kb\":\"num\",\"V\":i,\"CF\":\"" + c_f + "\"}) for i in range(1,4)]
 
   if c_f == "fill_table" and lh == 0 or val == "_":  # первая цифра дня
-    InlineKeyboardBuilder().add(ikb(text="1", callback_data="{\"Kb\":\"num\",\"V\":\"1\",\"CF\":\"" + c_f + "\"}"),
-                 ikb(text="2", callback_data="{\"Kb\":\"num\",\"V\":\"2\",\"CF\":\"" + c_f + "\"}"),
-                 ikb(text="3", callback_data="{\"Kb\":\"num\",\"V\":\"3\",\"CF\":\"" + c_f + "\"}")
-                )
+    InlineKeyboardBuilder().row(*[InlineKeyboardButton(text=str(i), callback_data={"Kb":"num","V":str(i),"CF":c_f}) for i in range(1,4)])
     if val != 0:
       InlineKeyboardBuilder().add(ikb(text="0", callback_data="{\"Kb\":\"num\",\"V\":\"0\",\"CF\":\"" + c_f + "\"}"))
 

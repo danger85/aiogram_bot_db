@@ -75,3 +75,29 @@ row_name = ["Валюта", "операция", "до 200", "<10.000", ">10.000"
 for x,i in enumerate(row_name):
     print("x is number = ",x)
     print("i is value = ",i)
+
+data = [['Валюта', '$', '$', '€', '€'],[ 'операция', 'покупка', 'продажа', 'покупка', 'продажа'], ['до 200','92.50', '94.70', '97.80', '99.80'], ['<10.000','92.70', '94.50', '98.00', '99.60'], ['>10.000','92.70', '94.50', '98.00', '99.60']]
+print(*[i for i in data])
+
+""" from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+# Пример данных (X - матрица признаков)
+X = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
+print("X  =>",X)
+# Стандартизация данных
+scaler = StandardScaler()
+X_std = scaler.fit_transform(X)
+print("X standard =>",X_std)
+
+# Создание объекта PCA
+pca = PCA(n_components=3,svd_solver="full")  # Здесь n_components - количество главных компонент, которые вы хотите получить
+
+# Применение PCA к стандартизированным данным
+X_pca = pca.fit_transform(X_std)
+print ("X_pca ->",X_pca) """
+
+di = {"1":"one","2":"two"}
+print(str(di))
+new_di= eval(str(di))
+print(type(new_di), " ", new_di)
+print(new_di["1"])

@@ -5,6 +5,10 @@ from lexicon.lexicon_ru import LEXICON_RU
 from bs4 import BeautifulSoup
 import requests
 from keyboards.currency_kb import currency_kb
+from keyboards.num_kb import numbers_kb
+import urllib3
+urllib3.disable_warnings()
+
 router= Router()
 
 """ @router.message(CommandStart)
@@ -56,12 +60,11 @@ async def currency(message: Message):
     print(f"\t usd currency sale{usd_curr_sell} ,eur currency sale{eur_curr_sell},"
           f"usd currency buy {usd_curr_buy}, eur currency buy{eur_curr_buy} ")
     row_name = ["Валюта", "операция", "до 200", "<10.000", ">10.000"]
-    data = {row_name[0]: ["$", "$", "€", "€"],
-            row_name[1]: ["покупка", "продажа", "покупка", "продажа"],
-            row_name[2]: [usd_curr_buy[0], usd_curr_sell[0], eur_curr_buy[0], eur_curr_sell[0]],
-            row_name[3]: [usd_curr_buy[1], usd_curr_sell[1], eur_curr_buy[1], eur_curr_sell[1]],
-            row_name[4]: [usd_curr_buy[2], usd_curr_sell[2], eur_curr_buy[2], eur_curr_sell[2]]
-            }
+    data : list (list) = [[row_name[0], "$", "$", "€", "€"],
+                         [row_name[1], "покупка", "продажа", "покупка", "продажа"],
+                         [row_name[2], usd_curr_buy[0], usd_curr_sell[0], eur_curr_buy[0], eur_curr_sell[0]],
+                         [row_name[3], usd_curr_buy[1], usd_curr_sell[1], eur_curr_buy[1], eur_curr_sell[1]],
+                         [row_name[4], usd_curr_buy[2], usd_curr_sell[2], eur_curr_buy[2], eur_curr_sell[2]]]
 
 # ЦБР
     c = requests.get("http://www.cbr.ru")
@@ -80,25 +83,23 @@ async def currency(message: Message):
       await message.answer("Не смог запарсить сайт ЦентрБанка")
       print(f"\t {usd_rate[1]}, {eur_rate[1]}")
     await message.answer(f"Данные с обменного пункта Благодатка, курс по ЦБ на сегодня $={usd_rate[1]} ₽, € = {eur_rate[1]} ₽",
-                         reply_markup = currency_kb(data, row_name))
+                         reply_markup = currency_kb("currency",data))
 
 @router.callback_query(F.data.contains("cur"))
-async def calc(callback: CallbackQuery):# "{\"Kb\":\"cur\",\"V\":\"" + str(data[i][0]) + "\",\"CF\":\"cur\"}"
-  print(f"Came from markup_currency to CALC function by callback,{callback.data} ",
-        f"called by {str(json.loads(str(callback.data))['CF'])}",
-        f"value is {str(json.loads(str(callback.data))['V'])}",
-        f"action is {str(json.loads(str(callback.data))['Kb'])}"
-       )
-  global mul_div
-  global exchange_k
-  exchange_k = json.loads(str(callback.data))['V']
-  mul_div = json.loads(str(callback.data))['Kb']
+async def calc(callback: CallbackQuery):# {"Kb":"cur","V":"100.0","CF":"cur"}
+  recieved_data = eval(callback.data)
+  print(f"Came from markup_currency to",__name__," CALC function by callback,{recieved_data} ",
+        f"called by {recieved_data['CF']}",
+        f"value  is {recieved_data['V']}",
+        f"action is {recieved_data['Kb']}")
+  exchange_k = recieved_data['V']
+  mul_div = recieved_data['Kb']
   if mul_div[:-1] == "div":
     await callback.message.answer(f"Введите сумму для внесения в кассу (₽), которую хотите обменять на {mul_div[-1]}",
-                                  reply_markup=markup_num("calc", "0"))
+                                  reply_markup=numbers_kb("calc", "0"))
   elif mul_div[:-1] == "mul":
     await callback.message.answer(f"Введите сумму для внесения в кассу ({mul_div[-1]}), которую хотите обменять на ₽",
-                                  reply_markup=markup_num("calc", "0"))
+                                  reply_markup=numbers_kb("calc", "0"))
 
 @router.callback_query(F.data.contains("num")) #обработка показа клавиатуры
 async def callback_num(callback: CallbackQuery):
