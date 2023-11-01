@@ -28,13 +28,11 @@ async def cmd_dice(message: Message):
 async def currency(message: Message):
     print(f"In currency function, called by command /c")
     #print(f"\tmessage text is {message.text}, came from {message.from_user.id}")
-    global exchange_k
-    global qty_out_text
-    qty_out_text = ""
-    exchange_k = 0
+    qty_out_text= ''
+    exchange_k: int = 0
     #await bot.delete_message(message.chat.id, message.message_id)
     # print("in currency function. called by command. Message id = ", message.message_id)
-    r = requests.get("https://blagodatka.ru/",timeout=10,verify=False)
+    r = requests.get("https://blagodatka.ru/", timeout=10, verify=False)
     soup = BeautifulSoup(r.content, "lxml")
     curr_buy = []
     usd_curr_buy, eur_curr_buy = [], []
@@ -60,7 +58,7 @@ async def currency(message: Message):
     print(f"\t usd currency sale{usd_curr_sell} ,eur currency sale{eur_curr_sell},"
           f"usd currency buy {usd_curr_buy}, eur currency buy{eur_curr_buy} ")
     row_name = ["Валюта", "операция", "до 200", "<10.000", ">10.000"]
-    data : list (list) = [[row_name[0], "$", "$", "€", "€"],
+    data : list [list] = [[row_name[0], "$", "$", "€", "€"],
                          [row_name[1], "покупка", "продажа", "покупка", "продажа"],
                          [row_name[2], usd_curr_buy[0], usd_curr_sell[0], eur_curr_buy[0], eur_curr_sell[0]],
                          [row_name[3], usd_curr_buy[1], usd_curr_sell[1], eur_curr_buy[1], eur_curr_sell[1]],
@@ -88,10 +86,7 @@ async def currency(message: Message):
 @router.callback_query(F.data.contains("cur"))
 async def calc(callback: CallbackQuery):# {"Kb":"cur","V":"100.0","CF":"cur"}
   recieved_data = eval(callback.data)
-  print(f"Came from markup_currency to",__name__," CALC function by callback,{recieved_data} ",
-        f"called by {recieved_data['CF']}",
-        f"value  is {recieved_data['V']}",
-        f"action is {recieved_data['Kb']}")
+  print(f"Came from {recieved_data['CF']} to {__name__},CALC function by callback,{recieved_data}, action is {recieved_data['Kb']}")
   exchange_k = recieved_data['V']
   mul_div = recieved_data['Kb']
   if mul_div[:-1] == "div":
@@ -103,19 +98,20 @@ async def calc(callback: CallbackQuery):# {"Kb":"cur","V":"100.0","CF":"cur"}
 
 @router.callback_query(F.data.contains("num")) #обработка показа клавиатуры
 async def callback_num(callback: CallbackQuery):
-  print(f"in callback_num function, by Callback, called by: {json.loads(callback.data)}")
+  print(f"in {__name__}, by Callback, called by: {callback.data}")
   #print(f"\tmessage text is {callback.message.text}, came from user {callback.message.from_user.id}")
-  digit = json.loads(callback.data)["V"]
+  recived_data:dict = eval(callback.data)
+  digit = recived_data["V"]
 
-  if json.loads(callback.data)["CF"] == "delete":  # если пришли из удаления
+  if recived_data["CF"] == "delete":  # если пришли из удаления
     global id_to_delete
     if len(id_to_delete) > 0:
       if id_to_delete[0] == "_":
           id_to_delete = ""
     id_to_delete = id_to_delete + digit
-    await dp.edit_message_text(id_to_delete, callback.message.chat.id, callback.message.message_id, reply_markup=markup_num("delete", "0"))
+    await callback.edit_message_text(id_to_delete, callback.message.chat.id, callback.message.message_id, reply_markup=numbers_kb("delete", "0"))
 
-  if json.loads(callback.data)["CF"] == "fill_table":
+  if recived_data["CF"] == "fill_table":
     global get_date
     if digit.isdigit() and len(get_date) <= 10:
       if get_date[:1] == "_":
@@ -125,23 +121,24 @@ async def callback_num(callback: CallbackQuery):
       get_date = get_date + "."
     if digit == "cls":
       get_date = "_"
-    await bot.edit_message_text(get_date, call.message.chat.id, call.message.message_id, reply_markup=markup_num("fill_table", get_date))
+    await callback.edit_message_text(get_date, callback.message.chat.id, callback.message.message_id, reply_markup=numbers_kb("fill_table", get_date))
 
-  if str(json.loads(callback.data)["CF"]) == "mod_p" or str(json.loads(callback.data)["CF"]) == "calc":
+  if recived_data["CF"] == "mod_p" or recived_data["CF"] == "calc":
     global qty_out_text
     qty_out_text = qty_out_text + str(digit)
-    await callback.message.edit_text(qty_out_text, reply_markup=markup_num(str(json.loads(callback.data)["CF"]), qty_out_text))
+    await callback.message.edit_text(qty_out_text, reply_markup=numbers_kb(callback.data["CF"]))
 
 @router.callback_query(F.data.contains("func_key") & F.data.contains("enter") & F.data.contains("calc")) #пришли после нажатия ввода при вычислении денег
-async def exchange_calc(call: CallbackQuery):
-  print(f"in exchange_calc function, ClBkHr, called by {list(json.loads(call.data).values())}")
-  print(f"\tmessage text is {call.message.text}, came from {call.message.from_user.id}")
+async def exchange_calc(callback: CallbackQuery):
+  recived_data:dict= eval(callback.data)
+  print(f"in exchange_calc function, ClBkHr, called by {list(recived_data.values())}")
+  print(f"\tmessage text is {callback.message.text}, came from {callback.message.from_user.id}")
   global messages_dict
   global exchange_k
   global qty_out_text
   global mul_div
   if mul_div[:-1] == "div":
     print(f"{qty_out_text}, {exchange_k}")
-    await call.message.edit_text(f"При обмене {qty_out_text} ₽ , получите {float(qty_out_text) / float(exchange_k)} {mul_div[-1]}")
+    await callback.message.edit_text(f"При обмене {qty_out_text} ₽ , получите {float(qty_out_text) / float(exchange_k)} {mul_div[-1]}")
   else:
-    await call.message.edit_text(f"При обмене {qty_out_text} {mul_div[-1]}, получите {float(qty_out_text) * float(exchange_k)} ₽")
+    await callback.message.edit_text(f"При обмене {qty_out_text} {mul_div[-1]}, получите {float(qty_out_text) * float(exchange_k)} ₽")

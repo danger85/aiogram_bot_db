@@ -1,12 +1,12 @@
 import asyncio
 
 import logging
-import json
 import os #для token
 import dotenv
 
 from config_data.config import Config, load_config
 from handlers import user_handlers, other_handlers
+from keyboards.main_menu import set_main_menu
 
 dotenv.load_dotenv()
 Bot_Token=os.getenv("bot_token")
@@ -19,8 +19,11 @@ from aiogram import F # для обработки нажатий клавиш
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove,InlineKeyboardButton, CallbackQuery,InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
-from keyboards.main_menu import set_main_menu
 
+class CallBackParametrs(CallbackData,prefix='data'):
+    keyboard:str
+    value: str
+    came_from: str
 
 async def main():
   config: Config = load_config()
