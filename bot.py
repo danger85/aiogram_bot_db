@@ -15,9 +15,6 @@ print(Bot_Token)
 from aiogram import Bot, Dispatcher, F #
 from aiogram.filters.command import Command # обработка команд
 from aiogram.enums.dice_emoji import DiceEmoji # кубики подбрасывать
-from aiogram import F # для обработки нажатий клавиш
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove,InlineKeyboardButton, CallbackQuery,InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 
 class CallBackParametrs(CallbackData,prefix='data'):
@@ -29,6 +26,10 @@ async def main():
   config: Config = load_config()
 
   # инициируем бота и диспетчер
+
+  global qty_out_text
+  qty_out_text=""
+
   bot = Bot(token=config.tg_bot.token)
   dp = Dispatcher()
 

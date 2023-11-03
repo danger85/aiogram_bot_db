@@ -11,9 +11,9 @@ urllib3.disable_warnings()
 
 router= Router()
 
-""" @router.message(CommandStart)
+@router.message(CommandStart())
 async def cmd_start(message:Message):
-  await message.answer(text=LEXICON_RU['/start']) """
+  await message.answer(text=LEXICON_RU['/start'])
 
 
 @router.message(Command(commands="help"))
@@ -109,7 +109,7 @@ async def callback_num(callback: CallbackQuery):
       if id_to_delete[0] == "_":
           id_to_delete = ""
     id_to_delete = id_to_delete + digit
-    await callback.edit_message_text(id_to_delete, callback.message.chat.id, callback.message.message_id, reply_markup=numbers_kb("delete", "0"))
+    await callback.message.edit_text(id_to_delete, callback.message.chat.id, callback.message.message_id, reply_markup=numbers_kb("delete", "0"))
 
   if recived_data["CF"] == "fill_table":
     global get_date
@@ -121,12 +121,11 @@ async def callback_num(callback: CallbackQuery):
       get_date = get_date + "."
     if digit == "cls":
       get_date = "_"
-    await callback.edit_message_text(get_date, callback.message.chat.id, callback.message.message_id, reply_markup=numbers_kb("fill_table", get_date))
+    await callback.message.edit_text(get_date, callback.message.chat.id, callback.message.message_id, reply_markup=numbers_kb("fill_table", get_date))
 
   if recived_data["CF"] == "mod_p" or recived_data["CF"] == "calc":
-    global qty_out_text
-    qty_out_text = qty_out_text + str(digit)
-    await callback.message.edit_text(qty_out_text, reply_markup=numbers_kb(callback.data["CF"]))
+    qty_out_text = recived_data[] + str(digit)
+    await callback.message.edit_text(qty_out_text, reply_markup=numbers_kb(recived_data["CF"], qty_out_text))
 
 @router.callback_query(F.data.contains("func_key") & F.data.contains("enter") & F.data.contains("calc")) #пришли после нажатия ввода при вычислении денег
 async def exchange_calc(callback: CallbackQuery):
